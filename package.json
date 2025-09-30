@@ -1,0 +1,41 @@
+{
+  "name": "api-orbis",
+  "version": "1.0.0",
+  "description": "API Orbis (Sala Livre) | Plataforma Integrada de Gestão de Espaços Tecnológicos",
+  "main": "src/http/server.ts",
+  "scripts": {
+    "dev": "tsx watch src/http/server.ts"
+  },
+  "keywords": [],
+  "author": {
+    "name": "Hilquias Ferreira Melo",
+    "email": "hilquiasfmelo@gmail.com",
+    "url": "https://github.com/hfmelodev"
+  },
+  "license": "ISC",
+  "packageManager": "pnpm@10.17.1",
+  "dependencies": {
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/cors": "^11.1.0",
+    "@fastify/jwt": "^10.0.0",
+    "@fastify/swagger": "^9.5.2",
+    "@fastify/swagger-ui": "^5.2.3",
+    "@prisma/client": "^6.16.2",
+    "axios": "^1.12.2",
+    "bcryptjs": "^3.0.2",
+    "dayjs": "^1.11.18",
+    "dotenv": "^17.2.3",
+    "fastify": "^5.6.1",
+    "fastify-plugin": "^5.1.0",
+    "fastify-type-provider-zod": "^6.0.0",
+    "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.4",
+    "@types/node": "^24.6.0",
+    "prisma": "^6.16.2",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.2"
+  }
+}
