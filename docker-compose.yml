@@ -1,0 +1,16 @@
+services:
+  srv-orbis:
+    image: bitnami/postgresql:latest
+    container_name: orbis
+    environment:
+      - POSTGRESQL_USERNAME=docker
+      - POSTGRESQL_PASSWORD=docker
+      - POSTGRESQL_DATABASE=db-orbis
+    ports:
+      - "5432:5432"
+    volumes:
+      - orbis_data:/bitnami/postgresql
+
+# Volumes declarados fora dos serviços
+volumes:
+  orbis_data:
