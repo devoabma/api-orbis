@@ -2,6 +2,7 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "_version": "24.0.0",
   "include": [
+    "**/*",
     "src/**/*",
     "@types/*.d.ts"
   ],
@@ -15,7 +16,7 @@
     ],
     "module": "nodenext",
     "target": "es2024",
-    "baseUrl": "./src",
+    "baseUrl": ".",
     "paths": {
       "@/*": [
         "./src/*"

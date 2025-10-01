@@ -4,6 +4,9 @@ import { z } from 'zod'
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production']).default('development'),
   API_PORT: z.coerce.number().default(3333),
+  DATABASE_URL: z.url('A variável DATABASE_URL é obrigatória'),
+  ADMIN_PASS: z.string().min(6, 'A variável ADMIN_PASS é obrigatória'),
+  ADMIN_CPF: z.string().min(11, 'A variável ADMIN_CPF é obrigatória'),
 })
 
 const _env = envSchema.safeParse(process.env)
