@@ -7,6 +7,8 @@ const envSchema = z.object({
   DATABASE_URL: z.url('A variável DATABASE_URL é obrigatória'),
   ADMIN_PASS: z.string().min(6, 'A variável ADMIN_PASS é obrigatória'),
   ADMIN_CPF: z.string().min(11, 'A variável ADMIN_CPF é obrigatória'),
+  JWT_SECRET: z.string('A variável JWT_SECRET é obrigatória'),
+  DOMAIN_URL: z.string('A variável DOMAIN_URL é obrigatória').default('localhost'),
 })
 
 const _env = envSchema.safeParse(process.env)
