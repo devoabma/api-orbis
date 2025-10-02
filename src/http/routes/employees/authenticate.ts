@@ -23,9 +23,6 @@ export async function authenticate(app: FastifyInstance) {
           400: z.object({
             message: z.string(),
           }),
-          500: z.object({
-            message: z.string(),
-          }),
         },
       },
     },
@@ -38,13 +35,13 @@ export async function authenticate(app: FastifyInstance) {
         },
       })
 
-      // Verifica se o funcionário existe e se ele esta ativo
-      if (employeeFromCPF && employeeFromCPF.inactive !== null) {
-        return reply.status(400).send({ message: 'O funcionário está inativo. Entre em contato com o administrador.' })
-      }
-
       if (!employeeFromCPF) {
         return reply.status(400).send({ message: 'Credenciais inválidas. Verifique suas informações e tente novamente.' })
+      }
+
+      // Verifica se o funcionário existe e se ele esta ativo
+      if (employeeFromCPF.inactive !== null) {
+        return reply.status(400).send({ message: 'O funcionário está inativo. Entre em contato com o administrador.' })
       }
 
       const isPasswordValid = await compare(password, employeeFromCPF.passwordHash)
