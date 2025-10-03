@@ -16,7 +16,7 @@
     "url": "https://github.com/hfmelodev"
   },
   "license": "ISC",
-  "packageManager": "pnpm@10.17.1",
+  "packageManager": "pnpm@10.18.0",
   "dependencies": {
     "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^11.1.0",
