@@ -5,6 +5,7 @@ import fastifySwagger from '@fastify/swagger'
 import fastifySwaggerUi from '@fastify/swagger-ui'
 import { fastify } from 'fastify'
 import { jsonSchemaTransform, serializerCompiler, validatorCompiler, type ZodTypeProvider } from 'fastify-type-provider-zod'
+import { errorHandler } from './@errors'
 import { env } from './env'
 import { appRoutes } from './routes'
 
@@ -12,6 +13,8 @@ export const app = fastify().withTypeProvider<ZodTypeProvider>()
 
 app.setSerializerCompiler(serializerCompiler)
 app.setValidatorCompiler(validatorCompiler)
+
+app.setErrorHandler(errorHandler) // configura o errorHandler global
 
 // Configura o swagger para documentação da API
 app.register(fastifySwagger, {

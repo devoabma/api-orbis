@@ -2,6 +2,7 @@ import { hash } from 'bcryptjs'
 import type { FastifyInstance } from 'fastify'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { z } from 'zod'
+import { BadRequestError } from '@/http/@errors/bad-request'
 import { prisma } from '@/lib/prisma'
 
 export async function createAccount(app: FastifyInstance) {
@@ -20,12 +21,6 @@ export async function createAccount(app: FastifyInstance) {
         }),
         response: {
           201: z.null(),
-          400: z.object({
-            message: z.string(),
-          }),
-          500: z.object({
-            message: z.string(),
-          }),
         },
       },
     },
@@ -41,9 +36,7 @@ export async function createAccount(app: FastifyInstance) {
       })
 
       if (employeeWithSameCpf) {
-        return reply.status(400).send({
-          message: 'Já existe um funcionário com esse CPF.',
-        })
+        throw new BadRequestError('Já existe um funcionário com esse CPF.')
       }
 
       const employeeWithSameEmail = await prisma.employees.findUnique({
@@ -53,9 +46,7 @@ export async function createAccount(app: FastifyInstance) {
       })
 
       if (employeeWithSameEmail) {
-        return reply.status(400).send({
-          message: 'Já existe um funcionário com esse e-mail.',
-        })
+        throw new BadRequestError('Já existe um funcionário com esse e-mail.')
       }
 
       // Encripta a senha do funcionário
@@ -72,11 +63,8 @@ export async function createAccount(app: FastifyInstance) {
         })
 
         return reply.status(201).send()
-      } catch (err) {
-        console.log(err)
-        return reply.status(500).send({
-          message: 'Houve um erro ao criar o funcionário.',
-        })
+      } catch {
+        throw new BadRequestError('Erro ao criar funcionário. Por favor, tente novamente.')
       }
     }
   )

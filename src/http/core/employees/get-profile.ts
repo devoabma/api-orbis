@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { z } from 'zod'
+import { BadRequestError } from '@/http/@errors/bad-request'
 import { auth } from '@/http/middlewares/auth'
 import { prisma } from '@/lib/prisma'
 
@@ -26,12 +27,6 @@ export async function getProfile(app: FastifyInstance) {
                 role: z.enum(['ADMIN', 'USER']),
               }),
             }),
-            401: z.object({
-              message: z.string(),
-            }),
-            404: z.object({
-              message: z.string(),
-            }),
           },
         },
       },
@@ -53,10 +48,10 @@ export async function getProfile(app: FastifyInstance) {
         })
 
         if (!employee) {
-          return reply.status(404).send({ message: 'Funcionário não encontrado.' })
+          throw new BadRequestError('Funcionário não encontrado.')
         }
 
-        return { employee }
+        return reply.status(200).send({ employee })
       }
     )
 }
