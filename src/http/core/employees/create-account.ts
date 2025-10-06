@@ -3,8 +3,11 @@ import type { FastifyInstance } from 'fastify'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import { BadRequestError } from '@/http/@errors/bad-request'
+import { env } from '@/http/env'
 import { auth } from '@/http/middlewares/auth'
 import { prisma } from '@/lib/prisma'
+import { resend } from '@/lib/resend'
+import { EmployeeSignUpEmail } from '@/utils/emails/employee-signup-email'
 
 export async function createAccount(app: FastifyInstance) {
   app
@@ -58,6 +61,20 @@ export async function createAccount(app: FastifyInstance) {
         const passwordHash = await hash(password, 6)
 
         try {
+          // Envia o e-mail de boas-vindas
+          await resend.emails.send({
+            from: '📧 Sala Livre <salalivre@oabma.com.br>',
+            to: env.NODE_ENV === 'production' ? email : 'hilquiasfmelo@hotmail.com',
+            subject: '🎉 Bem-vindo à equipe! Aqui estão suas informações.',
+            react: EmployeeSignUpEmail({
+              name,
+              cpf,
+              email,
+              tempPassword: password,
+              link: env.WEB_URL,
+            }),
+          })
+
           await prisma.employees.create({
             data: {
               name,

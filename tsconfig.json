@@ -7,6 +7,7 @@
     "@types/*.d.ts"
   ],
   "compilerOptions": {
+    "jsx": "preserve",
     "lib": [
       "es2024",
       "ESNext.Array",
