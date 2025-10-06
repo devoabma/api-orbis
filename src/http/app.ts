@@ -16,7 +16,7 @@ app.setValidatorCompiler(validatorCompiler)
 
 app.setErrorHandler(errorHandler) // configura o errorHandler global
 
-// Configura o swagger para documentação da API
+// configura o swagger para documentação da API
 app.register(fastifySwagger, {
   openapi: {
     info: {
