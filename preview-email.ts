@@ -1,10 +1,11 @@
 import { render } from '@react-email/components'
-import { PasswordChangedEmail } from './src/utils/emails/password-changed-email'
+import { ResetPasswordEmail } from './src/utils/emails/reset-password-email'
 
 async function main() {
   const html = await render(
-    PasswordChangedEmail({
+    ResetPasswordEmail({
       name: 'Hilquias Ferreira Melo',
+      code: '123456',
       link: 'https://sala-livre.vercel.app',
     })
   )
