@@ -1,13 +1,10 @@
 import { render } from '@react-email/components'
-import { EmployeeSignUpEmail } from './src/utils/emails/employee-signup-email'
+import { PasswordChangedEmail } from './src/utils/emails/password-changed-email'
 
 async function main() {
   const html = await render(
-    EmployeeSignUpEmail({
+    PasswordChangedEmail({
       name: 'Hilquias Ferreira Melo',
-      cpf: '123.456.789-00',
-      email: 'hilquiasfmelo@gmail.com',
-      tempPassword: '123456',
       link: 'https://sala-livre.vercel.app',
     })
   )

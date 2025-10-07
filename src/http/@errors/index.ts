@@ -14,9 +14,10 @@ export const errorHandler: FastifyErrorHandler = (error, _request, reply) => {
   }
 
   if (error instanceof ZodError) {
+    const tree = z.treeifyError(error)
     return reply.status(400).send({
       message: 'Erro na validação, verifique os dados enviados.',
-      errors: z.flattenError(error).fieldErrors,
+      errors: tree,
     })
   }
 
@@ -39,7 +40,7 @@ export const errorHandler: FastifyErrorHandler = (error, _request, reply) => {
     })
   }
 
-  console.error(error)
+  console.log(error)
   //TODO: Enviar erro para alguma plataforma de observabilidade
   return reply.status(500).send({
     message: 'Erro interno do servidor. Tente novamente mais tarde.',
