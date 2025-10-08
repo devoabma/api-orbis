@@ -3,8 +3,11 @@ import type { FastifyInstance } from 'fastify'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import { BadRequestError } from '@/http/@errors/bad-request'
+import { env } from '@/http/env'
 import { auth } from '@/http/middlewares/auth'
 import { prisma } from '@/lib/prisma'
+import { resend } from '@/lib/resend'
+import { PasswordChangedEmail } from '@/utils/emails/password-changed-email'
 
 export async function changePassword(app: FastifyInstance) {
   app
@@ -18,9 +21,9 @@ export async function changePassword(app: FastifyInstance) {
           summary: 'Altera a senha do usuário logado',
           security: [{ bearerAuth: [] }],
           body: z.object({
-            currentPassword: z.string().trim().min(6, 'A senha é obrigatória'),
-            newPassword: z.string().trim().min(6, 'A senha deve ter pelo menos 6 caracteres.'),
-            confirmNewPassword: z.string().trim().min(6, 'A senha deve ter pelo menos 6 caracteres.'),
+            currentPassword: z.string().trim().min(6),
+            newPassword: z.string().trim().min(6),
+            confirmNewPassword: z.string().trim().min(6),
           }),
           response: {
             200: z.null(),
@@ -63,6 +66,16 @@ export async function changePassword(app: FastifyInstance) {
         const newPasswordHash = await hash(newPassword, 6)
 
         try {
+          await resend.emails.send({
+            from: '📧 Sala Livre <salalivre@oabma.com.br>',
+            to: env.NODE_ENV === 'production' ? employee.email : 'hilquiasfmelo@hotmail.com',
+            subject: '🔑 Alteração de senha',
+            react: PasswordChangedEmail({
+              name: employee.name,
+              link: env.WEB_URL,
+            }),
+          })
+
           await prisma.employees.update({
             where: {
               id: employeeId,
@@ -73,8 +86,7 @@ export async function changePassword(app: FastifyInstance) {
           })
 
           return reply.status(200).send()
-        } catch (err) {
-          console.error('Erro ao atualizar senha:', err)
+        } catch {
           throw new BadRequestError('Erro ao alterar senha.')
         }
       }

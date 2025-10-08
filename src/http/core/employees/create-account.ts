@@ -21,10 +21,10 @@ export async function createAccount(app: FastifyInstance) {
           summary: 'Criação de um novo funcionário',
           security: [{ bearerAuth: [] }],
           body: z.object({
-            name: z.string().trim().min(1, 'O nome é obrigatório'),
-            cpf: z.string().trim().max(11, 'O CPF é obrigatório'),
-            email: z.email('O e-mail é obrigatório'),
-            password: z.string().trim().min(6, 'A senha é obrigatória'),
+            name: z.string().trim().min(1),
+            cpf: z.string().trim().max(11),
+            email: z.email(),
+            password: z.string().trim().min(6),
           }),
           response: {
             201: z.null(),

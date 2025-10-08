@@ -17,8 +17,8 @@ export async function requestPasswordRecover(app: FastifyInstance) {
         summary: 'Requisição de redefinição de senha',
         security: [{ bearerAuth: [] }],
         body: z.object({
-          cpf: z.string().trim().max(11, 'O CPF é obrigatório'),
-          email: email('O e-mail é obrigatório'),
+          cpf: z.string().trim().max(11),
+          email: email(),
         }),
         response: {
           200: z.null(),

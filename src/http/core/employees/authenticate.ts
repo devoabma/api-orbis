@@ -15,8 +15,8 @@ export async function authenticate(app: FastifyInstance) {
         tags: ['employees'],
         summary: 'Autenticação de um funcionário',
         body: z.object({
-          cpf: z.string().trim().max(11, 'O CPF é obrigatório'),
-          password: z.string().trim().min(6, 'A senha é obrigatória'),
+          cpf: z.string().trim().max(11),
+          password: z.string().trim().min(6),
         }),
         response: {
           201: z.object({
