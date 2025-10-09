@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
-import { email, z } from 'zod'
+import { z } from 'zod'
 import { BadRequestError } from '@/http/@errors/bad-request'
 import { env } from '@/http/env'
 import { prisma } from '@/lib/prisma'
@@ -18,7 +18,7 @@ export async function requestPasswordRecover(app: FastifyInstance) {
         security: [{ bearerAuth: [] }],
         body: z.object({
           cpf: z.string().trim().max(11),
-          email: email(),
+          email: z.email(),
         }),
         response: {
           200: z.null(),
@@ -39,7 +39,7 @@ export async function requestPasswordRecover(app: FastifyInstance) {
         throw new BadRequestError('Credenciais inválidas. Verifique suas informações e tente novamente.')
       }
 
-      const { code } = await prisma.tokens.create({
+      const token = await prisma.tokens.create({
         data: {
           type: 'PASSWORD_RECOVER',
           employeeId: employee.id,
@@ -54,21 +54,37 @@ export async function requestPasswordRecover(app: FastifyInstance) {
         subject: '🔄 Redefinição de Senha - Sala Livre',
         react: ResetPasswordEmail({
           name: employee.name,
-          code,
-          link: `${env.WEB_URL}/employees/reset-password?code=${code}`,
+          code: token.code,
+          link: `${env.WEB_URL}/employees/reset-password?code=${token.code}`,
         }),
       })
 
-      // Excluir o token após 2 minutos (120000ms)
+      // Seta o token como expirado em 3 minutos caso não seja atualizado (180000ms)
       setTimeout(async () => {
-        await prisma.tokens.delete({
-          where: { code },
+        const freshToken = await prisma.tokens.findUnique({
+          where: {
+            id: token.id,
+          },
+          select: {
+            expiresAt: true,
+          },
         })
-      }, 120000)
+
+        if (freshToken?.expiresAt === null) {
+          await prisma.tokens.update({
+            where: {
+              id: token.id,
+            },
+            data: {
+              expiresAt: new Date(),
+            },
+          })
+        }
+      }, 180000)
 
       // Somente em ambiente de desenvolvimento mostra no console
       if (env.NODE_ENV === 'development') {
-        console.log('> ✅ Email de redefinição de senha enviado com sucesso.', code)
+        console.log('> ✅ Email de redefinição de senha enviado com sucesso.', token.code)
       }
 
       return reply.status(200).send()
