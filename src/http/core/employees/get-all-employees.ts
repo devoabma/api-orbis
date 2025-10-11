@@ -5,7 +5,7 @@ import { BadRequestError } from '@/http/@errors/bad-request'
 import { auth } from '@/http/middlewares/auth'
 import { prisma } from '@/lib/prisma'
 
-export async function getAll(app: FastifyInstance) {
+export async function getAllEmployees(app: FastifyInstance) {
   app
     .withTypeProvider<ZodTypeProvider>()
     .register(auth)
