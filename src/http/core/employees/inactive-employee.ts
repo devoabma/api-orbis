@@ -38,7 +38,7 @@ export async function inactiveEmployee(app: FastifyInstance) {
           throw new NotFoundError('Funcionário não encontrado.')
         }
 
-        if (employee.inactive) {
+        if (employee.inactive !== null) {
           throw new BadRequestError('Funcionário já está inativo.')
         }
 

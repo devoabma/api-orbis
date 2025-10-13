@@ -14,5 +14,7 @@
   },
   "[svg]": {
     "editor.defaultFormatter": "jock.svg"
-  }
+  },
+  "chat.mcp.gallery.enabled": true,
+  "github.copilot.chat.newWorkspace.useContext7": true
 }
