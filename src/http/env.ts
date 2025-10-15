@@ -11,6 +11,9 @@ const envSchema = z.object({
   DOMAIN_URL: z.string('A variável DOMAIN_URL é obrigatória').default('localhost'),
   WEB_URL: z.string('A variável WEB_URL é obrigatória').default('http://localhost:3000'),
   RESEND_API_KEY: z.string('A variável RESEND_API_KEY é obrigatória'),
+  CLOUDINARY_API_KEY: z.string('A variável CLOUDINARY_API_KEY é obrigatória'),
+  CLOUDINARY_API_SECRET: z.string('A variável CLOUDINARY_API_SECRET é obrigatória'),
+  CLOUDINARY_CLOUD_NAME: z.string('A variável CLOUDINARY_CLOUD_NAME é obrigatória'),
 })
 
 const _env = envSchema.safeParse(process.env)

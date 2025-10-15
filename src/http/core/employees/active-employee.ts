@@ -6,16 +6,16 @@ import { NotFoundError } from '@/http/@errors/not-found'
 import { auth } from '@/http/middlewares/auth'
 import { prisma } from '@/lib/prisma'
 
-export async function inactiveEmployee(app: FastifyInstance) {
+export async function activeEmployee(app: FastifyInstance) {
   app
     .withTypeProvider<ZodTypeProvider>()
     .register(auth)
     .patch(
-      '/inactive/:id',
+      '/active/:id',
       {
         schema: {
           tags: ['employees'],
-          summary: 'Inativa um funcionário',
+          summary: 'Ativa um funcionário',
           security: [{ bearerAuth: [] }],
           params: z.object({
             id: z.cuid(),
@@ -38,15 +38,14 @@ export async function inactiveEmployee(app: FastifyInstance) {
           throw new NotFoundError('Funcionário não encontrado.')
         }
 
-        if (employee.inactive !== null) {
-          throw new BadRequestError('Funcionário já está inativo.')
+        if (!employee.inactive) {
+          throw new BadRequestError('Funcionário já está ativo.')
         }
 
         await prisma.employees.update({
           where: { id },
           data: {
-            inactive: new Date(),
-            updatedAt: new Date(),
+            inactive: null,
           },
         })
 
