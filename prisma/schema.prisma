@@ -24,23 +24,24 @@ model Tokens {
   createdAt DateTime   @default(now()) @map("created_at")
   expiresAt DateTime?  @map("expires_at")
 
-  employee   Employees @relation(fields: [employeeId], references: [id])
+  employee   Employees @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   employeeId String    @map("employee_id")
 
   @@map("tokens")
 }
 
 model Employees {
-  id           String    @id @default(cuid())
-  name         String
-  cpf          String    @unique
-  email        String    @unique
-  avatarUrl    String?   @map("avatar_url")
-  passwordHash String    @map("password_hash")
-  role         Roles     @default(USER)
-  inactive     DateTime?
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt() @map("updated_at")
+  id             String    @id @default(cuid())
+  name           String
+  cpf            String    @unique
+  email          String    @unique
+  avatarUrl      String?   @map("avatar_url")
+  avatarPublicId String?   @map("avatar_public_id")
+  passwordHash   String    @map("password_hash")
+  role           Roles     @default(USER)
+  inactive       DateTime?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt() @map("updated_at")
 
   employeesRooms EmployeesRooms[]
   tokens         Tokens[]

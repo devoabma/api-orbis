@@ -17,7 +17,6 @@ export async function updateEmployee(app: FastifyInstance) {
         schema: {
           tags: ['employees'],
           summary: 'Atualiza um funcionário',
-          description: 'Atualiza os dados de um funcionário pelo ID',
           params: z.object({
             id: z.cuid(),
           }),

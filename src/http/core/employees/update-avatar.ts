@@ -5,15 +5,9 @@ import streamifier from 'streamifier'
 import { z } from 'zod'
 import { BadRequestError } from '@/http/@errors/bad-request'
 import { NotFoundError } from '@/http/@errors/not-found'
-import { env } from '@/http/env'
 import { auth } from '@/http/middlewares/auth'
 import { prisma } from '@/lib/prisma'
-
-cloudinary.config({
-  cloud_name: env.CLOUDINARY_CLOUD_NAME,
-  api_key: env.CLOUDINARY_API_KEY,
-  api_secret: env.CLOUDINARY_API_SECRET,
-})
+import '@/lib/cloudinary'
 
 export async function updateAvatar(app: FastifyInstance) {
   app
@@ -25,12 +19,10 @@ export async function updateAvatar(app: FastifyInstance) {
         schema: {
           tags: ['employees'],
           summary: 'Atualiza o avatar de um funcionário',
-          description: 'Atualiza o avatar de um funcionário pelo ID',
           consumes: ['multipart/form-data'], // importante para o Swagger entender o formato do corpo da requisição
           security: [{ bearerAuth: [] }],
           response: {
             200: z.object({
-              message: z.string(),
               avatarUrl: z.url(),
             }),
           },
@@ -40,10 +32,16 @@ export async function updateAvatar(app: FastifyInstance) {
         const employeeId = await request.getCurrentEmployeeId()
 
         // pega o arquivo enviado
-        const data = await request.file()
+        const file = await request.file()
 
-        if (!data) {
+        if (!file) {
           throw new BadRequestError('Nenhum arquivo foi enviado.')
+        }
+
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+
+        if (!allowedTypes.includes(file.mimetype)) {
+          throw new BadRequestError('Tipo de arquivo inválido. Envie uma imagem JPG, PNG ou WEBP.')
         }
 
         const employee = await prisma.employees.findUnique({
@@ -54,31 +52,54 @@ export async function updateAvatar(app: FastifyInstance) {
           throw new NotFoundError('Funcionário não encontrado.')
         }
 
+        // Se já tiver avatar antigo, deleta do Cloudinary
+        if (employee.avatarPublicId) {
+          try {
+            await cloudinary.uploader.destroy(employee.avatarPublicId)
+          } catch (err) {
+            console.warn('Erro ao excluir avatar do Cloudinary:', err)
+            throw new BadRequestError('Falha ao excluir o avatar.')
+          }
+        }
+
         // faz upload para o Cloudinary via stream
-        const uploadToCloudinary = (buffer: Buffer): Promise<string> => {
+        const uploadToCloudinary = (buffer: Buffer): Promise<{ url: string; publicId: string }> => {
           return new Promise((resolve, reject) => {
             const stream = cloudinary.uploader.upload_stream(
-              { folder: 'employees/avatars', resource_type: 'image' },
+              {
+                folder: 'employees-api-orbis',
+                resource_type: 'image',
+                public_id: `${employeeId}-${employee.name.split(' ')[0]}`,
+              },
               (error, result) => {
-                if (error || !result) reject(error)
-                else resolve(result.secure_url)
+                if (error || !result) {
+                  reject(error)
+                  throw new BadRequestError('Falha ao enviar o avatar.')
+                } else {
+                  resolve({
+                    url: result.url,
+                    publicId: result.asset_id,
+                  })
+                }
               }
             )
+            // envia o buffer para o stream
             streamifier.createReadStream(buffer).pipe(stream)
           })
         }
 
         try {
-          const buffer = await data.toBuffer()
-          const avatarUrl = await uploadToCloudinary(buffer)
+          // Aqui é transformado o arquivo recebido (`file`, que vem do Fastify) em um `Buffer`.
+          // Um `Buffer` é basicamente um bloco de bytes na memória — ele contém todo o conteúdo binário da imagem.
+          const buffer = await file.toBuffer()
+          const { url: avatarUrl, publicId } = await uploadToCloudinary(buffer)
 
           await prisma.employees.update({
             where: { id: employeeId },
-            data: { avatarUrl },
+            data: { avatarUrl, avatarPublicId: publicId },
           })
 
           return reply.status(200).send({
-            message: 'Avatar atualizado com sucesso.',
             avatarUrl,
           })
         } catch (err) {
