@@ -1,7 +1,7 @@
+import { Readable } from 'node:stream'
 import { v2 as cloudinary } from 'cloudinary'
 import type { FastifyInstance } from 'fastify'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
-import streamifier from 'streamifier'
 import { z } from 'zod'
 import { BadRequestError } from '@/http/@errors/bad-request'
 import { NotFoundError } from '@/http/@errors/not-found'
@@ -62,12 +62,12 @@ export async function updateAvatar(app: FastifyInstance) {
           }
         }
 
-        // faz upload para o Cloudinary via stream
+        // Faz upload para o Cloudinary via stream
         const uploadToCloudinary = (buffer: Buffer): Promise<{ url: string; publicId: string }> => {
           return new Promise((resolve, reject) => {
             const stream = cloudinary.uploader.upload_stream(
               {
-                folder: 'employees-api-orbis',
+                folder: 'orbis/employees',
                 resource_type: 'image',
                 public_id: `${employeeId}-${employee.name.split(' ')[0]}`,
               },
@@ -83,8 +83,8 @@ export async function updateAvatar(app: FastifyInstance) {
                 }
               }
             )
-            // envia o buffer para o stream
-            streamifier.createReadStream(buffer).pipe(stream)
+            // Envia o buffer para o stream do Cloudinary
+            Readable.from(buffer).pipe(stream)
           })
         }
 
