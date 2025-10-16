@@ -10,6 +10,7 @@ import { requestPasswordRecover } from '../core/employees/request-password-recov
 import { resetPassword } from '../core/employees/reset-password'
 import { updateAvatar } from '../core/employees/update-avatar'
 import { updateEmployee } from '../core/employees/update-employee'
+import { createRoom } from '../core/rooms/create-room'
 
 export async function appRoutes(app: FastifyInstance) {
   app.register(createAccount, { prefix: '/employees' })
@@ -23,4 +24,6 @@ export async function appRoutes(app: FastifyInstance) {
   app.register(activeEmployee, { prefix: '/employees' })
   app.register(updateEmployee, { prefix: '/employees' })
   app.register(updateAvatar, { prefix: '/employees' })
+
+  app.register(createRoom, { prefix: '/rooms' })
 }

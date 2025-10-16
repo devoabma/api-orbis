@@ -41,9 +41,6 @@ export async function createAccount(app: FastifyInstance) {
           where: {
             cpf,
           },
-          include: {
-            employeesRooms: true,
-          },
         })
 
         if (employeeWithSameCpf) {

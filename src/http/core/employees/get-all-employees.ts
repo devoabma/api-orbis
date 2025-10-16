@@ -61,7 +61,7 @@ export async function getAllEmployees(app: FastifyInstance) {
           const [employees, totalOfEmployees] = await prisma.$transaction([
             prisma.employees.findMany({
               where: {
-                name: name ? { contains: name, mode: 'insensitive' } : undefined,
+                name: { contains: name, mode: 'insensitive' },
                 cpf,
                 role,
               },
@@ -85,7 +85,7 @@ export async function getAllEmployees(app: FastifyInstance) {
             }),
             prisma.employees.count({
               where: {
-                name: name ? { contains: name, mode: 'insensitive' } : undefined,
+                name: { contains: name, mode: 'insensitive' },
                 cpf,
                 role,
               },
