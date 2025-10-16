@@ -33,9 +33,21 @@ export async function getAllEmployees(app: FastifyInstance) {
                   avatarUrl: z.url().nullable(),
                   role: z.enum(['ADMIN', 'USER']),
                   inactive: z.date().nullable(),
+                  employeesRooms: z.array(
+                    z.object({
+                      id: z.cuid(),
+                      createdAt: z.date(),
+                      rooms: z.object({
+                        id: z.cuid(),
+                        name: z.string(),
+                        description: z.string(),
+                      }),
+                    })
+                  ),
                 })
               ),
               totalOfEmployees: z.number(),
+              totalPages: z.number(),
             }),
           },
         },
@@ -50,8 +62,8 @@ export async function getAllEmployees(app: FastifyInstance) {
             prisma.employees.findMany({
               where: {
                 name: name ? { contains: name, mode: 'insensitive' } : undefined,
-                cpf: cpf ? cpf : undefined,
-                role: role ? role : undefined,
+                cpf,
+                role,
               },
               select: {
                 id: true,
@@ -61,30 +73,33 @@ export async function getAllEmployees(app: FastifyInstance) {
                 avatarUrl: true,
                 role: true,
                 inactive: true,
+                employeesRooms: {
+                  include: {
+                    rooms: true,
+                  },
+                },
               },
-              orderBy: { name: 'desc' }, // Ordem decrescente que significa que os mais recentes vem primeiro
+              orderBy: { createdAt: 'desc' },
               skip: (pageIndex - 1) * 10,
               take: 10,
             }),
             prisma.employees.count({
               where: {
                 name: name ? { contains: name, mode: 'insensitive' } : undefined,
-                cpf: cpf ? cpf : undefined,
-                role: role ? role : undefined,
+                cpf,
+                role,
               },
             }),
           ])
 
-          if (!employees) {
-            throw new Error('Nenhum funcionário encontrado')
-          }
-
           return reply.status(200).send({
             employees,
             totalOfEmployees,
+            totalPages: Math.ceil(totalOfEmployees / 10),
           })
-        } catch {
-          throw new BadRequestError('Não foi possível encontrar os funcionários')
+        } catch (err) {
+          console.error('Erro ao buscar funcionários:', err)
+          throw new BadRequestError('Erro ao buscar funcionários. Tente novamente mais tarde.')
         }
       }
     )

@@ -54,9 +54,9 @@ model EmployeesRooms {
   createdAt DateTime @default(now()) @map("created_at")
 
   // (onDelete: Cascade) — quando um funcionário ou sala for deletado, os registros intermediários são removidos automaticamente.
-  employee   Employees @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employees  Employees @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   employeeId String    @map("employee_id")
-  room       Rooms     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  rooms      Rooms     @relation(fields: [roomId], references: [id], onDelete: Cascade)
   roomId     String    @map("room_id")
 
   // Evitar duplicidade, um mesmo funcionário não pode ser vinculado à mesma sala duas vezes.
