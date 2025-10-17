@@ -5,7 +5,7 @@ import { BadRequestError } from '@/http/@errors/bad-request'
 import { auth } from '@/http/middlewares/auth'
 import { prisma } from '@/lib/prisma'
 
-export async function getAllEmployees(app: FastifyInstance) {
+export async function getAllRooms(app: FastifyInstance) {
   app
     .withTypeProvider<ZodTypeProvider>()
     .register(auth)
@@ -13,40 +13,36 @@ export async function getAllEmployees(app: FastifyInstance) {
       '/get-all',
       {
         schema: {
-          tags: ['employees'],
-          summary: 'Retorna todos os funcionários',
+          tags: ['rooms'],
+          summary: 'Retorna todas as salas',
           security: [{ bearerAuth: [] }],
           querystring: z.object({
             pageIndex: z.coerce.number().default(1),
             name: z.string().optional(),
-            cpf: z.string().optional(),
-            role: z.enum(['ADMIN', 'USER']).optional(),
           }),
           response: {
             200: z.object({
-              employees: z.array(
+              rooms: z.array(
                 z.object({
                   id: z.cuid(),
                   name: z.string(),
-                  cpf: z.string(),
-                  email: z.email(),
-                  avatarUrl: z.url().nullable(),
-                  role: z.enum(['ADMIN', 'USER']),
                   inactive: z.date().nullable(),
                   employeesRooms: z.array(
                     z.object({
                       id: z.cuid(),
                       createdAt: z.date(),
-                      rooms: z.object({
+                      employees: z.object({
                         id: z.cuid(),
                         name: z.string(),
-                        description: z.string().nullable(),
+                        cpf: z.string(),
+                        email: z.email(),
+                        avatarUrl: z.url().nullable(),
                       }),
                     })
                   ),
                 })
               ),
-              totalOfEmployees: z.number(),
+              totalOfRooms: z.number(),
               totalPages: z.number(),
             }),
           },
@@ -55,27 +51,21 @@ export async function getAllEmployees(app: FastifyInstance) {
       async (request, reply) => {
         await request.checkIfEmployeeIsAdmin()
 
-        const { pageIndex, name, cpf, role } = request.query
+        const { pageIndex, name } = request.query
 
         try {
-          const [employees, totalOfEmployees] = await prisma.$transaction([
-            prisma.employees.findMany({
+          const [rooms, totalOfRooms] = await prisma.$transaction([
+            prisma.rooms.findMany({
               where: {
                 name: { contains: name, mode: 'insensitive' },
-                cpf,
-                role,
               },
               select: {
                 id: true,
                 name: true,
-                cpf: true,
-                email: true,
-                avatarUrl: true,
-                role: true,
                 inactive: true,
                 employeesRooms: {
                   include: {
-                    rooms: true,
+                    employees: true,
                   },
                 },
               },
@@ -86,20 +76,18 @@ export async function getAllEmployees(app: FastifyInstance) {
             prisma.employees.count({
               where: {
                 name: { contains: name, mode: 'insensitive' },
-                cpf,
-                role,
               },
             }),
           ])
 
           return reply.status(200).send({
-            employees,
-            totalOfEmployees,
-            totalPages: Math.ceil(totalOfEmployees / 10),
+            rooms,
+            totalOfRooms,
+            totalPages: Math.ceil(totalOfRooms / 10),
           })
         } catch (err) {
-          console.error('Erro ao buscar funcionários:', err)
-          throw new BadRequestError('Erro ao buscar funcionários. Tente novamente mais tarde.')
+          console.error('Erro ao buscar salas:', err)
+          throw new BadRequestError('Erro ao buscar salas. Tente novamente mais tarde.')
         }
       }
     )

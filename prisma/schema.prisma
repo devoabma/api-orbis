@@ -65,16 +65,17 @@ model EmployeesRooms {
 }
 
 model Rooms {
-  id           String    @id @default(cuid())
-  name         String    @unique
+  id             String    @id @default(cuid())
+  name           String    @unique
+  normalizedName String    @unique
   // Tempo padrão em minutos
-  standardTime Int       @default(180) @map("standard_time")
+  standardTime   Int       @default(180) @map("standard_time")
   // Tempo restante em minutos
-  remeningTime Int?      @map("remening_time")
-  description  String?
-  inactive     DateTime?
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt() @map("updated_at")
+  remeningTime   Int?      @map("remening_time")
+  description    String?
+  inactive       DateTime?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt() @map("updated_at")
 
   employeesRooms EmployeesRooms[]
   computers      Computers[]

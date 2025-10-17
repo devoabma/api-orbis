@@ -32,19 +32,23 @@ export async function createRoom(app: FastifyInstance) {
 
         const { name, standardTime, description } = request.body
 
+        // Crie a versão normalizada do nome
+        const normalizedName = name.toLowerCase().replace(/[\s-]+/g, '') // Remove espaços e hífens
+
         const roomAlreadyExists = await prisma.rooms.findUnique({
           where: {
-            name,
+            normalizedName,
           },
         })
 
         if (roomAlreadyExists) {
-          throw new BadRequestError('Já existe uma sala com esse nome.')
+          throw new BadRequestError('Já existe uma sala com um nome muito parecido ou idêntico.')
         }
 
         await prisma.rooms.create({
           data: {
             name,
+            normalizedName,
             standardTime,
             description,
           },
