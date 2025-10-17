@@ -2,7 +2,6 @@ import { compare } from 'bcryptjs'
 import type { FastifyInstance } from 'fastify'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import z from 'zod'
-import { BadRequestError } from '@/http/@errors/bad-request'
 import { UnauthorizedError } from '@/http/@errors/unauthorized'
 import { env } from '@/http/env'
 import { prisma } from '@/lib/prisma'
@@ -35,7 +34,7 @@ export async function authenticate(app: FastifyInstance) {
       })
 
       if (!employeeFromCPF) {
-        throw new BadRequestError('Credenciais inválidas. Verifique suas informações e tente novamente.')
+        throw new UnauthorizedError('Credenciais inválidas. Verifique suas informações e tente novamente.')
       }
 
       // Verifica se o funcionário existe e se ele esta ativo
@@ -46,7 +45,7 @@ export async function authenticate(app: FastifyInstance) {
       const isPasswordValid = await compare(password, employeeFromCPF.passwordHash)
 
       if (!isPasswordValid) {
-        throw new BadRequestError('Credenciais inválidas. Verifique suas informações e tente novamente.')
+        throw new UnauthorizedError('Credenciais inválidas. Verifique suas informações e tente novamente.')
       }
 
       // Criação do token de autenticação
