@@ -1,0 +1,52 @@
+{
+  "name": "api-orbis",
+  "version": "1.0.0",
+  "description": "API Orbis (Sala Livre) | Plataforma Integrada de Gestão de Espaços Tecnológicos",
+  "main": "src/http/server.ts",
+  "scripts": {
+    "dev": "tsx watch src/http/server.ts"
+  },
+  "keywords": [],
+  "author": {
+    "name": "Hilquias Ferreira Melo",
+    "email": "hilquiasfmelo@gmail.com",
+    "url": "https://github.com/hfmelodev"
+  },
+  "license": "ISC",
+  "packageManager": "pnpm@10.20.0",
+  "dependencies": {
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/cors": "^11.2.0",
+    "@fastify/jwt": "^10.0.0",
+    "@fastify/multipart": "^9.4.0",
+    "@fastify/swagger": "^9.7.0",
+    "@fastify/swagger-ui": "^5.2.5",
+    "@prisma/adapter-pg": "^7.5.0",
+    "@prisma/client": "^7.5.0",
+    "@prisma/extension-accelerate": "^3.0.1",
+    "@react-email/components": "^0.5.7",
+    "axios": "^1.13.6",
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.9.0",
+    "dayjs": "^1.11.20",
+    "dotenv": "^17.3.1",
+    "fastify": "^5.8.2",
+    "fastify-plugin": "^5.1.0",
+    "fastify-type-provider-zod": "^6.1.0",
+    "pg": "^8.20.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "resend": "^6.9.3",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.7",
+    "@types/node": "^24.12.0",
+    "@types/react": "^19.2.14",
+    "prisma": "^7.5.0",
+    "react-email": "^4.3.2",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
