@@ -64,12 +64,16 @@ export async function getAllRooms(app: FastifyInstance) {
 
         const { pageIndex, name } = request.query
 
+        const PER_PAGE = 10
+
         try {
+          const where = {
+            name: { contains: name, mode: 'insensitive' as const },
+          }
+
           const [rooms, totalOfRooms] = await prisma.$transaction([
             prisma.rooms.findMany({
-              where: {
-                name: { contains: name, mode: 'insensitive' },
-              },
+              where,
               select: {
                 id: true,
                 name: true,
@@ -77,30 +81,46 @@ export async function getAllRooms(app: FastifyInstance) {
                 description: true,
                 inactive: true,
                 employeesRooms: {
-                  include: {
-                    employees: true,
+                  select: {
+                    id: true,
+                    createdAt: true,
+                    employees: {
+                      select: {
+                        id: true,
+                        name: true,
+                        cpf: true,
+                        email: true,
+                        avatarUrl: true,
+                      },
+                    },
                   },
                 },
-                computers: true,
+                computers: {
+                  select: {
+                    id: true,
+                    mac_code: true,
+                    number: true,
+                    description: true,
+                    createdAt: true,
+                  },
+                },
               },
               orderBy: { createdAt: 'desc' },
-              skip: (pageIndex - 1) * 10,
-              take: 10,
+              skip: (pageIndex - 1) * PER_PAGE,
+              take: PER_PAGE,
             }),
             prisma.rooms.count({
-              where: {
-                name: { contains: name, mode: 'insensitive' },
-              },
+              where,
             }),
           ])
 
           return reply.status(200).send({
             rooms,
             totalOfRooms,
-            totalPages: Math.ceil(totalOfRooms / 10),
+            totalPages: Math.ceil(totalOfRooms / PER_PAGE),
           })
         } catch (err) {
-          console.error('Erro ao buscar salas:', err)
+          request.log.error({ err }, 'Erro ao buscar salas')
           throw new BadRequestError('Erro ao buscar salas. Tente novamente mais tarde.')
         }
       }

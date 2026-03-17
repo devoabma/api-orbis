@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { BadRequestError } from '@/http/@errors/bad-request'
 import { auth } from '@/http/middlewares/auth'
 import { prisma } from '@/lib/prisma'
+import { normalizeRoomName } from '@/utils/app/room-utils'
 
 export async function createRoom(app: FastifyInstance) {
   app
@@ -17,13 +18,15 @@ export async function createRoom(app: FastifyInstance) {
           summary: 'Criação de uma nova sala',
           security: [{ bearerAuth: [] }],
           body: z.object({
-            name: z.string().trim().min(1),
+            name: z.string().trim().nonempty(),
             standardTime: z.number().int().positive().optional(),
             description: z.string().optional(),
           }),
           response: {
             201: z.object({
-              roomId: z.cuid(),
+              roomId: z.object({
+                id: z.cuid(),
+              }),
             }),
           },
         },
@@ -34,12 +37,16 @@ export async function createRoom(app: FastifyInstance) {
 
         const { name, standardTime, description } = request.body
 
-        // Crie a versão normalizada do nome
-        const normalizedName = name.toLowerCase().replace(/[\s-]+/g, '') // Remove espaços e hífens
+        // Crie a versão normalizada do nome usando o utilitário
+        const normalizedName = normalizeRoomName(name)
 
         const roomAlreadyExists = await prisma.rooms.findUnique({
           where: {
             normalizedName,
+          },
+          select: {
+            id: true,
+            normalizedName: true,
           },
         })
 
@@ -47,18 +54,34 @@ export async function createRoom(app: FastifyInstance) {
           throw new BadRequestError('Já existe uma sala com um nome muito parecido ou idêntico.')
         }
 
-        const room = await prisma.rooms.create({
-          data: {
-            name,
-            normalizedName,
-            standardTime,
-            description,
-          },
-        })
+        const nameUpperCase = name.toUpperCase()
 
-        return reply.status(201).send({
-          roomId: room.id,
-        })
+        console.log(nameUpperCase)
+
+        try {
+          const room = await prisma.rooms.create({
+            data: {
+              name: nameUpperCase,
+              normalizedName,
+              standardTime,
+              description,
+            },
+          })
+
+          return reply.status(201).send({
+            roomId: {
+              id: room.id,
+            },
+          })
+        } catch (err) {
+          // Caso ocorra uma violação de unicidade concorrente (race condition)
+          if (err instanceof Error && 'code' in err && err.code === 'P2002') {
+            throw new BadRequestError('Já existe uma sala com um nome muito parecido ou idêntico.')
+          }
+
+          console.error('Não foi possível criar a sala.', err)
+          throw new BadRequestError('Não foi possível realizar a criação da sala.')
+        }
       }
     )
 }

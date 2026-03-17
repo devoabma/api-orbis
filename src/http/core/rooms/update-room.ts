@@ -5,6 +5,7 @@ import { BadRequestError } from '@/http/@errors/bad-request'
 import { NotFoundError } from '@/http/@errors/not-found'
 import { auth } from '@/http/middlewares/auth'
 import { prisma } from '@/lib/prisma'
+import { normalizeRoomName } from '@/utils/app/room-utils'
 
 export async function updateRoom(app: FastifyInstance) {
   app
@@ -39,15 +40,22 @@ export async function updateRoom(app: FastifyInstance) {
 
         const room = await prisma.rooms.findUnique({
           where: { id },
+          select: {
+            id: true,
+            normalizedName: true,
+            name: true,
+          },
         })
 
         if (!room) {
           throw new NotFoundError('Sala não encontrada.')
         }
 
+        let normalizedName: string | undefined
+
         if (name && name !== room.name) {
-          // Crie a versão normalizada do nome
-          const normalizedName = name.toLowerCase().replace(/[\s-]+/g, '') // Remove espaços e hífens
+          // Crie a versão normalizada do nome usando o utilitário
+          normalizedName = normalizeRoomName(name)
 
           const roomAlreadyExists = await prisma.rooms.findUnique({
             where: {
@@ -62,13 +70,10 @@ export async function updateRoom(app: FastifyInstance) {
 
         try {
           // Monta dinamicamente apenas os campos que foram realmente enviados na requisição.
-          // O operador "..." espalha os pares chave/valor apenas se a condição for verdadeira.
-          // Exemplo: se "name" existir, adiciona { name }, caso contrário não adiciona nada.
-          // Isso evita enviar campos undefined para o Prisma e mantém o update limpo.
           const dataToUpdate = {
             ...(name && {
               name,
-              normalizedName: name.toLowerCase().replace(/[\s-]+/g, ''), // Atualiza o nome normalizado junto
+              normalizedName, // Usa a versão já calculada acima
             }),
             ...(standardTime && { standardTime }),
             ...(description && { description }),

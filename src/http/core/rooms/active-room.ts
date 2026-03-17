@@ -21,7 +21,7 @@ export async function activeRoom(app: FastifyInstance) {
             id: z.cuid(),
           }),
           response: {
-            200: z.null(),
+            200: z.null().describe('Sala ativada com sucesso.'),
           },
         },
       },
@@ -32,6 +32,10 @@ export async function activeRoom(app: FastifyInstance) {
 
         const room = await prisma.rooms.findUnique({
           where: { id },
+          select: {
+            id: true,
+            inactive: true,
+          },
         })
 
         if (!room) {
@@ -46,11 +50,10 @@ export async function activeRoom(app: FastifyInstance) {
           where: { id },
           data: {
             inactive: null,
-            updatedAt: new Date(),
           },
         })
 
-        return reply.status(200).send()
+        return reply.status(200).send(null)
       }
     )
 }
