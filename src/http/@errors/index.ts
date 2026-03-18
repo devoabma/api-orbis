@@ -8,7 +8,6 @@ import { UnauthorizedError } from './unauthorized'
 type FastifyErrorHandler = FastifyInstance['errorHandler']
 
 export const errorHandler: FastifyErrorHandler = (error, request, reply) => {
-
   if (error instanceof ZodError) {
     const tree = z.treeifyError(error)
     return reply.status(400).send({

@@ -32,12 +32,9 @@ export async function createRoom(app: FastifyInstance) {
         },
       },
       async (request, reply) => {
-        // somente administradores podem criar novas salas
         await request.checkIfEmployeeIsAdmin()
 
         const { name, standardTime, description } = request.body
-
-        // Crie a versão normalizada do nome usando o utilitário
         const normalizedName = normalizeRoomName(name)
 
         const roomAlreadyExists = await prisma.rooms.findUnique({
@@ -55,8 +52,6 @@ export async function createRoom(app: FastifyInstance) {
         }
 
         const nameUpperCase = name.toUpperCase()
-
-        console.log(nameUpperCase)
 
         try {
           const room = await prisma.rooms.create({

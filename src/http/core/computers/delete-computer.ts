@@ -1,9 +1,9 @@
 import type { FastifyInstance } from 'fastify'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { z } from 'zod'
+import { NotFoundError } from '@/http/@errors/not-found'
 import { auth } from '@/http/middlewares/auth'
 import { prisma } from '@/lib/prisma'
-import { NotFoundError } from '@/http/@errors/not-found'
 
 export async function deleteComputer(app: FastifyInstance) {
   app
@@ -20,8 +20,8 @@ export async function deleteComputer(app: FastifyInstance) {
             id: z.cuid(),
           }),
           response: {
-            204: z.null(),
-          }
+            204: z.null().describe('Computador deletado com sucesso.'),
+          },
         },
       },
       async (request, reply) => {
@@ -31,6 +31,9 @@ export async function deleteComputer(app: FastifyInstance) {
 
         const computer = await prisma.computers.findUnique({
           where: { id },
+          select: {
+            id: true,
+          },
         })
 
         if (!computer) {
@@ -41,7 +44,7 @@ export async function deleteComputer(app: FastifyInstance) {
           where: { id },
         })
 
-        return reply.status(204).send()
+        return reply.status(204).send(null)
       }
     )
 }

@@ -98,6 +98,8 @@ model Computers {
   computerSession ComputerSessions[]
   printers        Printers[]
 
+  @@unique([number, roomId])
+  @@unique([description, roomId])
   @@map("computers")
 }
 

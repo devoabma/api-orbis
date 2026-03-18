@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import { BadRequestError } from '@/http/@errors/bad-request'
+import { NotFoundError } from '@/http/@errors/not-found'
 import { auth } from '@/http/middlewares/auth'
 import { prisma } from '@/lib/prisma'
 
@@ -25,29 +26,45 @@ export async function updateComputer(app: FastifyInstance) {
             description: z.string().optional(),
           }),
           response: {
-            200: z.null(),
+            200: z.null().describe('Computador atualizado com sucesso.'),
           },
         },
       },
       async (request, reply) => {
         await request.checkIfEmployeeIsAdmin()
 
-        // Obtenha o ID da sala do computador
         const { id } = request.params
-        // Obtenha o ID da sala do computador retornando um erro caso ele não seja encontrado
-        const { roomId } = await prisma.computers.findUniqueOrThrow({
-          where: { id },
-          select: { roomId: true },
-        })
-
         const { mac_code, number, description } = request.body
 
-        // Crie a versão normalizada do código MAC (remova espaços, hifen, etc.)
+        // Busca o computador e sua sala de forma manual para um erro amigável
+        const computer = await prisma.computers.findUnique({
+          where: { id },
+          select: {
+            id: true,
+            roomId: true,
+            room: {
+              select: {
+                inactive: true,
+              },
+            },
+          },
+        })
+
+        if (!computer) {
+          throw new NotFoundError('Computador não encontrado.')
+        }
+
+        if (computer.room.inactive) {
+          throw new BadRequestError('Não é possível atualizar computadores de uma sala inativa.')
+        }
+
+        const roomId = computer.roomId
+
+        // Normalização manual do MAC (12 caracteres hex)
         const normalizedMac = mac_code ? mac_code.trim().toLowerCase().replace(/[:-]/g, '') : undefined
 
-        // Crie a versão normalizada do código MAC (remova espaços, hifen, etc.)
         if (normalizedMac && normalizedMac.length !== 12) {
-          throw new BadRequestError('O código MAC deve ter 12 caracteres.')
+          throw new BadRequestError('O código MAC deve ter exatos 12 caracteres hexadecimais.')
         }
 
         if (normalizedMac !== undefined) {
@@ -97,12 +114,18 @@ export async function updateComputer(app: FastifyInstance) {
           ...(description !== undefined && { description }),
         }
 
-        await prisma.computers.update({
-          where: { id },
-          data: dataToUpdate,
-        })
+        try {
+          await prisma.computers.update({
+            where: { id },
+            data: dataToUpdate,
+          })
 
-        return reply.status(200).send()
+          return reply.status(200).send(null)
+        } catch (err) {
+          request.log.error({ err }, 'Erro ao atualizar computador')
+          // Repassamos o erro para o errorHandler que agora trata Prisma P2002
+          throw err
+        }
       }
     )
 }

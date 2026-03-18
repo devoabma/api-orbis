@@ -11,9 +11,25 @@ async function checkExpiredSessions() {
 
   const candidateSessions = await prisma.computerSessions.findMany({
     where: { endedAt: null },
-    include: {
-      computer: { include: { room: true } },
-      lawyer: true,
+    select: {
+      id: true,
+      startedAt: true,
+      computerId: true,
+      lawyerId: true,
+      lawyer: {
+        select: {
+          remainingTime: true,
+        },
+      },
+      computer: {
+        select: {
+          room: {
+            select: {
+              standardTime: true,
+            },
+          },
+        },
+      },
     },
   })
 
@@ -53,9 +69,10 @@ export function startAutoCloseSessionsJob() {
     } catch (err) {
       console.error('[AutoClose ❌] Erro ao verificar sessões expiradas:', err)
     } finally {
-      setTimeout(run, INTERVAL_MS) // ← só agenda o próximo DEPOIS de terminar
+      setTimeout(run, INTERVAL_MS)
     }
   }
 
-  run()
+  // Aguarda 3 segundos antes do primeiro arranque para garantir estabilidade do DB
+  setTimeout(run, 3000)
 }

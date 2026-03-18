@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { z } from 'zod'
+import type { Prisma } from '@/generated/prisma'
 import { BadRequestError } from '@/http/@errors/bad-request'
 import { auth } from '@/http/middlewares/auth'
 import { prisma } from '@/lib/prisma'
@@ -57,13 +58,16 @@ export async function getAllComputers(app: FastifyInstance) {
         const { pageIndex, description } = request.query
         const { roomId } = request.params
 
+        const PER_PAGE = 10
+
         try {
+          const where: Prisma.ComputersWhereInput = {
+            description: description ? { contains: description.trim(), mode: 'insensitive' } : undefined,
+            roomId: roomId ?? undefined,
+          }
           const [computers, totalOfComputers] = await prisma.$transaction([
             prisma.computers.findMany({
-              where: {
-                description: { contains: description, mode: 'insensitive' },
-                ...(roomId && { id: roomId }),
-              },
+              where,
               select: {
                 id: true,
                 mac_code: true,
@@ -83,23 +87,19 @@ export async function getAllComputers(app: FastifyInstance) {
                 },
               },
               orderBy: { createdAt: 'desc' },
-              skip: (pageIndex - 1) * 10,
-              take: 10,
+              skip: (pageIndex - 1) * PER_PAGE,
+              take: PER_PAGE,
             }),
-            prisma.computers.count({
-              where: {
-                description: { contains: description, mode: 'insensitive' },
-              },
-            }),
+            prisma.computers.count({ where }),
           ])
 
           return reply.status(200).send({
             computers,
             totalOfComputers,
-            totalPages: Math.ceil(totalOfComputers / 10),
+            totalPages: Math.ceil(totalOfComputers / PER_PAGE),
           })
         } catch (err) {
-          console.error('Erro ao buscar computadores:', err)
+          request.log.error({ err }, 'Erro ao buscar computadores. Tente novamente mais tarde.')
           throw new BadRequestError('Erro ao buscar computadores. Tente novamente mais tarde.')
         }
       }

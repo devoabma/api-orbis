@@ -21,7 +21,7 @@ export async function takeMaintenance(app: FastifyInstance) {
             id: z.cuid(),
           }),
           response: {
-            204: z.null(),
+            204: z.null().describe('Computador retirado de manutenção com sucesso.'),
           },
         },
       },
@@ -32,6 +32,10 @@ export async function takeMaintenance(app: FastifyInstance) {
 
         const computer = await prisma.computers.findUnique({
           where: { id },
+          select: {
+            id: true,
+            maintenance: true,
+          },
         })
 
         if (!computer) {
@@ -46,11 +50,10 @@ export async function takeMaintenance(app: FastifyInstance) {
           where: { id },
           data: {
             maintenance: null,
-            updatedAt: new Date(),
           },
         })
 
-        return reply.status(204).send()
+        return reply.status(204).send(null)
       }
     )
 }
