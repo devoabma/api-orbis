@@ -1,18 +1,20 @@
 import { AxiosError } from 'axios'
 import type { FastifyInstance } from 'fastify'
-import { ZodError, z } from 'zod'
+import { ZodError } from 'zod'
 import { BadRequestError } from './bad-request'
 import { NotFoundError } from './not-found'
 import { UnauthorizedError } from './unauthorized'
 
 type FastifyErrorHandler = FastifyInstance['errorHandler']
 
-export const errorHandler: FastifyErrorHandler = (error, request, reply) => {
-  if (error instanceof ZodError) {
-    const tree = z.treeifyError(error)
+export const errorHandler: FastifyErrorHandler = (error, _, reply) => {
+  // Verificação robusta para erros de validação (Zod ou Fastify)
+  const isValidationError =
+    error instanceof ZodError || (error as any)?.constructor?.name === 'ZodError' || !!(error as any).validation
+
+  if (isValidationError) {
     return reply.status(400).send({
-      message: 'Erro na validação, verifique os dados enviados.',
-      errors: tree,
+      message: 'Erro na validação, verifique os campos e dados enviados.',
     })
   }
 
@@ -41,8 +43,6 @@ export const errorHandler: FastifyErrorHandler = (error, request, reply) => {
     })
   }
 
-  request.log.error({ err: error }, 'Erro interno não tratado')
-  //TODO: Enviar erro para alguma plataforma de observabilidade
   return reply.status(500).send({
     message: 'Erro interno do servidor. Tente novamente mais tarde.',
   })

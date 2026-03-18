@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { z } from 'zod'
+import { BadRequestError } from '@/http/@errors/bad-request'
 import { NotFoundError } from '@/http/@errors/not-found'
 import { auth } from '@/http/middlewares/auth'
 import { prisma } from '@/lib/prisma'
@@ -33,6 +34,11 @@ export async function deleteComputer(app: FastifyInstance) {
           where: { id },
           select: {
             id: true,
+            room: {
+              select: {
+                inactive: true,
+              },
+            },
           },
         })
 
@@ -40,11 +46,20 @@ export async function deleteComputer(app: FastifyInstance) {
           throw new NotFoundError('Computador não encontrado.')
         }
 
-        await prisma.computers.delete({
-          where: { id },
-        })
+        if (computer.room.inactive) {
+          throw new BadRequestError('Não é possível deletar computadores de uma sala inativa.')
+        }
 
-        return reply.status(204).send(null)
+        try {
+          await prisma.computers.delete({
+            where: { id },
+          })
+
+          return reply.status(204).send(null)
+        } catch (err) {
+          request.log.error({ err }, 'Erro ao deletar computador')
+          throw err
+        }
       }
     )
 }

@@ -35,6 +35,11 @@ export async function placedMaintenance(app: FastifyInstance) {
           select: {
             id: true,
             maintenance: true,
+            room: {
+              select: {
+                inactive: true,
+              },
+            },
           },
         })
 
@@ -42,18 +47,27 @@ export async function placedMaintenance(app: FastifyInstance) {
           throw new NotFoundError('Computador não encontrado.')
         }
 
+        if (computer.room.inactive) {
+          throw new BadRequestError('Não é possível alterar o estado de manutenção de computadores em uma sala inativa.')
+        }
+
         if (computer.maintenance) {
           throw new BadRequestError('Computador já esta em manutenção.')
         }
 
-        await prisma.computers.update({
-          where: { id },
-          data: {
-            maintenance: new Date(),
-          },
-        })
+        try {
+          await prisma.computers.update({
+            where: { id },
+            data: {
+              maintenance: new Date(),
+            },
+          })
 
-        return reply.status(204).send(null)
+          return reply.status(204).send(null)
+        } catch (err) {
+          request.log.error({ err }, 'Erro ao colocar computador em manutenção')
+          throw err
+        }
       }
     )
 }
